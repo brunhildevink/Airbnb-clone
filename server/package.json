@@ -1,0 +1,28 @@
+{
+  "name": "tinyhouse-v1-server",
+  "version": "0.1.0",
+  "description": "A tinyhouse server",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.ts",
+    "build": "tsc -p ./"
+  },
+  "author": "brunhilde",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-express": "^2.21.1",
+    "express": "^4.17.1",
+    "graphql": "^15.5.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/graphql": "^14.5.0",
+    "@types/node": "^14.14.31",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "eslint": "^7.21.0",
+    "nodemon": "^2.0.7",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  }
+}
