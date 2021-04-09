@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { server } from "../../lib/api";
 import {
   DeleteListingData,
   DeleteListingVariables,
+  Listing,
   ListingsData,
 } from "./types";
 
@@ -34,26 +36,51 @@ export interface Props {
 }
 
 export const Listings = ({ title }: Props) => {
+  const [listings, setListings] = useState<Listing[]>([]);
+
   const fetchListings = async () => {
     const { data } = await server.fetch<ListingsData>({ query: LISTINGS });
-    console.log(data);
+    if (data.listings) setListings(data.listings);
   };
 
-  const deleteListing = async () => {
+  const deleteListing = async (id: string) => {
     const { data } = await server.fetch<DeleteListingData>({
       query: DELETE_LISTING,
       variables: {
-        id: "60706c803c3e3b46ef15c9f5",
+        id,
       },
     });
-    console.log(data);
+
+    fetchListings();
   };
 
+  const listingsList = listings.map((listing) => (
+    <li
+      key={listing.id}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        maxWidth: "300px",
+        minHeight: "300px",
+        justifyContent: "space-between",
+        margin: "20px",
+      }}
+    >
+      <img src={listing.image} alt="listing" />
+      <span>{listing.title}</span>
+      <button onClick={() => deleteListing(listing.id)}>Delete</button>
+    </li>
+  ));
+
   return (
-    <>
+    <div>
       <h2>{title}</h2>
       <button onClick={fetchListings}>Query Listings</button>
-      <button onClick={deleteListing}>Delete Listing</button>
-    </>
+      {listings.length > 0 ? (
+        <ul style={{ display: "flex" }}>{listingsList}</ul>
+      ) : (
+        <div>No listings</div>
+      )}
+    </div>
   );
 };
