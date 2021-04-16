@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useReducer } from "react";
+import { useReducer } from "react";
 import { server } from "./server";
 
 interface State<TData> {
@@ -12,9 +12,10 @@ type Action<TData> =
   | { type: "FETCH_SUCCESS"; payload: TData }
   | { type: "FETCH_ERROR" };
 
-interface QueryResult<Tdata> extends State<Tdata> {
-  refetch: () => void;
-}
+type MutationTuple<TData, TVariables> = [
+  (variables?: TVariables | undefined) => Promise<void>,
+  State<TData>
+];
 
 const reducer = <TData>() => (
   state: State<TData>,
@@ -32,7 +33,9 @@ const reducer = <TData>() => (
   }
 };
 
-export const useQuery = <TData = any>(query: string): QueryResult<TData> => {
+export const useMutation = <TData = any, TVariables = any>(
+  query: string
+): MutationTuple<TData, TVariables> => {
   const fetchReducer = reducer<TData>();
 
   const [state, dispatch] = useReducer(fetchReducer, {
@@ -41,29 +44,25 @@ export const useQuery = <TData = any>(query: string): QueryResult<TData> => {
     error: false,
   });
 
-  const fetch = useCallback(() => {
-    const fetchApi = async () => {
-      try {
-        dispatch({ type: "FETCH" });
-        const { data, errors } = await server.fetch<TData>({ query });
+  const fetch = async (variables?: TVariables) => {
+    try {
+      dispatch({ type: "FETCH" });
 
-        if (errors && errors.length > 0) {
-          throw new Error(errors[0].message);
-        }
+      const { data, errors } = await server.fetch<TData, TVariables>({
+        query,
+        variables,
+      });
 
-        dispatch({ type: "FETCH_SUCCESS", payload: data });
-      } catch (err) {
-        dispatch({ type: "FETCH_ERROR" });
-        throw console.error(err);
+      if (errors && errors.length > 0) {
+        throw new Error(errors[0].message);
       }
-    };
 
-    fetchApi();
-  }, [query]);
+      dispatch({ type: "FETCH_SUCCESS", payload: data });
+    } catch (err) {
+      dispatch({ type: "FETCH_ERROR" });
+      throw console.error(err);
+    }
+  };
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
-
-  return { ...state, refetch: fetch };
+  return [fetch, state];
 };

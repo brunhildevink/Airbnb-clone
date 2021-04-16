@@ -1,4 +1,4 @@
-import { server, useQuery } from "../../lib/api";
+import { useQuery, useMutation } from "../../lib/api";
 import {
   DeleteListingData,
   DeleteListingVariables,
@@ -29,52 +29,103 @@ const DELETE_LISTING = `
   }
 `;
 
+const imageStyle = {
+  height: "200px",
+  maxWidth: "100%",
+};
+
+const listingsStyle = {
+  display: "flex",
+  flexFlow: "row wrap",
+};
+
+const buttonStyle = {
+  display: "block",
+  width: "100%",
+  marginTop: "8px",
+  background: "darkRed",
+  padding: "8px",
+  borderRadius: "4px",
+  border: "none",
+  color: "white",
+  cursor: "pointer",
+};
+
+const cardStyle = {
+  display: "flex",
+  flexFlow: "column",
+  maxWidth: "300px",
+  minHeight: "300px",
+  justifyContent: "space-between",
+  margin: "20px",
+  boxShadow: "2px 2px 8px 4px rgba(0,0,0,0.15)",
+  borderRadius: "4px",
+  overflow: "hidden",
+};
+
+const wrapperStyle = {
+  padding: "20px",
+};
+
 export interface Props {
   title: string;
 }
 
 export const Listings = ({ title }: Props) => {
-  const { data, refetch } = useQuery<ListingsData>(LISTINGS);
+  const { data, error, loading, refetch } = useQuery<ListingsData>(LISTINGS);
 
   const listings = data ? data.listings : [];
 
-  const deleteListing = async (id: string) => {
-    const { data } = await server.fetch<DeleteListingData>({
-      query: DELETE_LISTING,
-      variables: {
-        id,
-      },
-    });
+  const [
+    deleteListing,
+    { loading: deleteListingLoading, error: deleteListingError },
+  ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTING);
 
+  const handleDeleteListing = async (id: string) => {
+    await deleteListing({ id });
     refetch();
   };
 
   const listingsList = listings.map((listing) => (
-    <li
-      key={listing.id}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        maxWidth: "300px",
-        minHeight: "300px",
-        justifyContent: "space-between",
-        margin: "20px",
-      }}
-    >
-      <img src={listing.image} alt="listing" />
-      <span>{listing.title}</span>
-      <button onClick={() => deleteListing(listing.id)}>Delete</button>
+    <li key={listing.id} style={cardStyle}>
+      <img style={imageStyle} src={listing.image} alt="listing" />
+      <div style={wrapperStyle}>
+        <span>{listing.title}</span>
+        <button
+          style={buttonStyle}
+          onClick={() => handleDeleteListing(listing.id)}
+        >
+          Delete
+        </button>
+      </div>
     </li>
   ));
 
+  const deleteListingLoadingMessage = deleteListingLoading ? (
+    <h4>Deleting...</h4>
+  ) : null;
+
+  const deleteListingErrorMessage = deleteListingError ? (
+    <h4>Uh oh! Something went wrong while deleting this listing...</h4>
+  ) : null;
+
+  if (loading) return <h2>Loading...</h2>;
+
+  if (error)
+    return <h2>Uh oh! Something went wrong - please try again later :(</h2>;
+
   return (
-    <div>
+    <>
       <h2>{title}</h2>
       {listings.length > 0 ? (
-        <ul style={{ display: "flex" }}>{listingsList}</ul>
+        <>
+          <ul style={listingsStyle}>{listingsList}</ul>
+          {deleteListingLoadingMessage}
+          {deleteListingErrorMessage}
+        </>
       ) : (
         <div>No listings</div>
       )}
-    </div>
+    </>
   );
 };
