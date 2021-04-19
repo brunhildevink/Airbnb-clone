@@ -37,13 +37,14 @@ const imageStyle = {
 const listingsStyle = {
   display: "flex",
   flexFlow: "row wrap",
+  padding: "0",
 };
 
 const buttonStyle = {
   display: "block",
   width: "100%",
   marginTop: "8px",
-  background: "darkRed",
+  background: "#c64756",
   padding: "8px",
   borderRadius: "4px",
   border: "none",
@@ -57,14 +58,20 @@ const cardStyle = {
   maxWidth: "300px",
   minHeight: "300px",
   justifyContent: "space-between",
-  margin: "20px",
+  margin: "20px 40px 20px 0",
   boxShadow: "2px 2px 8px 4px rgba(0,0,0,0.15)",
   borderRadius: "4px",
   overflow: "hidden",
 };
 
-const wrapperStyle = {
+const contentStyle = {
   padding: "20px",
+};
+
+const wrapperStyle = {
+  padding: "0 200px",
+  margin: "0 auto",
+  maxWidth: "1400px",
 };
 
 export interface Props {
@@ -89,7 +96,7 @@ export const Listings = ({ title }: Props) => {
   const listingsList = listings.map((listing) => (
     <li key={listing.id} style={cardStyle}>
       <img style={imageStyle} src={listing.image} alt="listing" />
-      <div style={wrapperStyle}>
+      <div style={contentStyle}>
         <span>{listing.title}</span>
         <button
           style={buttonStyle}
@@ -115,7 +122,7 @@ export const Listings = ({ title }: Props) => {
     return <h2>Uh oh! Something went wrong - please try again later :(</h2>;
 
   return (
-    <>
+    <div style={wrapperStyle}>
       <h2>{title}</h2>
       {listings.length > 0 ? (
         <>
@@ -126,6 +133,6 @@ export const Listings = ({ title }: Props) => {
       ) : (
         <div>No listings</div>
       )}
-    </>
+    </div>
   );
 };
