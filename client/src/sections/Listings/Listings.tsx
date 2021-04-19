@@ -46,7 +46,7 @@ const buttonStyle = {
   marginTop: "8px",
   background: "#c64756",
   padding: "8px",
-  borderRadius: "4px",
+  borderRadius: "3px",
   border: "none",
   color: "white",
   cursor: "pointer",
