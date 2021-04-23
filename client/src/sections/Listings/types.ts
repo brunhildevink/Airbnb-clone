@@ -10,9 +10,9 @@ export interface Listing {
   rating: number;
 }
 
-export interface ListingsData {
+export type ListingsData = {
   listings: Listing[];
-}
+};
 
 export interface DeleteListingData {
   deleteListing: Listing;
