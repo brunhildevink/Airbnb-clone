@@ -1,9 +1,15 @@
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { Alert, Avatar, Button, List, Spin } from "antd";
+
 import { Listings as ListingsData } from "./__generated__/Listings";
 import {
   DeleteListing as DeleteListingData,
   DeleteListingVariables,
 } from "./__generated__/DeleteListing";
+
+import { ListingsSkeleton } from "./components";
+
+import "./styles/listings.css";
 
 const LISTINGS = gql`
   query Listings {
@@ -29,51 +35,6 @@ const DELETE_LISTING = gql`
   }
 `;
 
-const imageStyle = {
-  height: "200px",
-  maxWidth: "100%",
-};
-
-const listingsStyle = {
-  display: "flex",
-  flexFlow: "row wrap",
-  padding: "0",
-};
-
-const buttonStyle = {
-  display: "block",
-  width: "100%",
-  marginTop: "8px",
-  background: "#c64756",
-  padding: "8px",
-  borderRadius: "4px",
-  border: "none",
-  color: "white",
-  cursor: "pointer",
-};
-
-const cardStyle = {
-  display: "flex",
-  flexFlow: "column",
-  maxWidth: "300px",
-  minHeight: "300px",
-  justifyContent: "space-between",
-  margin: "20px 40px 20px 0",
-  boxShadow: "2px 2px 8px 4px rgba(0,0,0,0.15)",
-  borderRadius: "4px",
-  overflow: "hidden",
-};
-
-const contentStyle = {
-  padding: "20px",
-};
-
-const wrapperStyle = {
-  padding: "0 200px",
-  margin: "0 auto",
-  maxWidth: "1400px",
-};
-
 export interface Props {
   title: string;
 }
@@ -93,46 +54,68 @@ export const Listings = ({ title }: Props) => {
     refetch();
   };
 
-  const listingsList = listings.map((listing) => (
-    <li key={listing.id} style={cardStyle}>
-      <img style={imageStyle} src={listing.image} alt="listing" />
-      <div style={contentStyle}>
-        <span>{listing.title}</span>
-        <button
-          style={buttonStyle}
-          onClick={() => handleDeleteListing(listing.id)}
+  const listingsList = (
+    <List
+      itemLayout="horizontal"
+      dataSource={listings}
+      renderItem={(listing) => (
+        <List.Item
+          actions={[
+            <Button
+              style={{ borderRadius: "4px" }}
+              type="primary"
+              onClick={() => handleDeleteListing(listing.id)}
+            >
+              Delete listing
+            </Button>,
+          ]}
         >
-          Delete
-        </button>
+          <List.Item.Meta
+            avatar={
+              <Avatar
+                src={listing.image}
+                size={48}
+                shape="square"
+                style={{ borderRadius: "4px" }}
+              />
+            }
+            title={listing.title}
+            description={listing.address}
+          />
+        </List.Item>
+      )}
+    />
+  );
+
+  const deleteListingErrorAlert = deleteListingError && (
+    <Alert
+      type="error"
+      className="listings-skeleton-alert"
+      message="Uh oh! Something went wrong - please try again later :("
+    />
+  );
+
+  if (loading)
+    return (
+      <div className="listings">
+        <ListingsSkeleton title={title} />
       </div>
-    </li>
-  ));
-
-  const deleteListingLoadingMessage = deleteListingLoading ? (
-    <h4>Deleting...</h4>
-  ) : null;
-
-  const deleteListingErrorMessage = deleteListingError ? (
-    <h4>Uh oh! Something went wrong while deleting this listing...</h4>
-  ) : null;
-
-  if (loading) return <h2>Loading...</h2>;
+    );
 
   if (error)
-    return <h2>Uh oh! Something went wrong - please try again later :(</h2>;
+    return (
+      <div className="listings">
+        <ListingsSkeleton title={title} error />
+      </div>
+    );
 
   return (
-    <div style={wrapperStyle}>
-      <h2>{title}</h2>
-      {listings.length > 0 ? (
-        <>
-          <ul style={listingsStyle}>{listingsList}</ul>
-          {deleteListingLoadingMessage}
-          {deleteListingErrorMessage}
-        </>
-      ) : (
-        <div>No listings</div>
-      )}
+    <div className="listings">
+      <Spin spinning={deleteListingLoading}>
+        {deleteListingErrorAlert}
+        <h2>{title}</h2>
+        {listings.length > 0 ? <>{listingsList}</> : <div>No listings</div>}
+      </Spin>
     </div>
   );
 };
