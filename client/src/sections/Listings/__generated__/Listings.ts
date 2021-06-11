@@ -15,9 +15,6 @@ export interface Listings_listings {
   address: string;
   price: number;
   numOfGuests: number;
-  numOfBaths: number;
-  numOfBeds: number;
-  rating: number;
 }
 
 export interface Listings {

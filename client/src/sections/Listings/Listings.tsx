@@ -15,14 +15,11 @@ const LISTINGS = gql`
   query Listings {
     listings {
       id
-      title
-      image
       address
-      price
+      image
       numOfGuests
-      numOfBaths
-      numOfBeds
-      rating
+      price
+      title
     }
   }
 `;
