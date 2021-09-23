@@ -9,8 +9,8 @@ export interface Viewer {
 }
 
 export enum ListingType {
-  Apartment = "APARTMENT",
-  House = "HOUSE",
+  Apartment = "apartment",
+  House = "house",
 }
 
 export interface BookingsIndexMonth {
@@ -21,45 +21,41 @@ export interface BookingsIndexYear {
   [key: string]: BookingsIndexMonth;
 }
 
-export interface BookingIndex {
-  [key: string]: BookingsIndexYear;
+export interface Booking {
+  _id: ObjectId;
+  listing: ObjectId;
+  tenant: string;
+  checkIn: string;
+  checkOut: string;
 }
 
 export interface Listing {
   _id: ObjectId;
-  address: string;
-  admin: string;
-  bookings: ObjectId[];
-  bookingsIndex: BookingIndex;
-  city: string;
-  country: string;
-  description?: string;
-  host: string;
-  image?: string;
-  numOfGuests?: number;
-  price: number;
   title: string;
-  type?: ListingType;
-}
-
-export interface Booking {
-  _id: ObjectId;
-  checkIn: string;
-  checkOut: string;
-  listing: ObjectId;
-  tenant: string;
+  description: string;
+  image: string;
+  host: string;
+  type: ListingType;
+  address: string;
+  country: string;
+  admin: string;
+  city: string;
+  bookings: ObjectId[];
+  bookingsIndex: BookingsIndexYear;
+  price: number;
+  numOfGuests: number;
 }
 
 export interface User {
   _id: string;
-  avatar: string;
-  bookings: ObjectId[];
-  contact: string;
-  income: number;
-  listings: ObjectId[];
-  name: string;
   token: string;
+  name: string;
+  avatar: string;
+  contact: string;
   walletId?: string;
+  income: number;
+  bookings: ObjectId[];
+  listings: ObjectId[];
 }
 
 export interface Database {
