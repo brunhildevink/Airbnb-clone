@@ -4,9 +4,10 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 
 import reportWebVitals from "./reportWebVitals";
-import { Layout } from "antd";
+import { Affix, Layout } from "antd";
 import { Viewer } from "./lib/types";
 import {
+  AppHeader,
   Home,
   Host,
   Listing,
@@ -29,11 +30,13 @@ const initialViewer: Viewer = {
 
 const App = () => {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
-  console.log(viewer);
 
   return (
     <Router>
       <Layout id="app">
+        <Affix offsetTop={0} className="app__affix-header">
+          <AppHeader viewer={viewer} setViewer={setViewer} />
+        </Affix>
         <Switch>
           <Route exact path="/" component={Home} />
           <Route exact path="/host" component={Host} />
