@@ -83,6 +83,7 @@ export const Login = ({ setViewer }: Props) => {
 
   return (
     <Content className="log-in">
+      {logInErrorBannerElement}
       <Card className="log-in-card">
         <div className="log-in-card__intro">
           <Title level={3} className="log-in-card__intro-title">
