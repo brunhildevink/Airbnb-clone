@@ -3,7 +3,10 @@ import { render } from "react-dom";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import {
   ApolloClient,
+  ApolloLink,
   ApolloProvider,
+  concat,
+  HttpLink,
   InMemoryCache,
   useMutation,
 } from "@apollo/client";
@@ -29,7 +32,20 @@ import {
 import "./styles/index.css";
 import { AppHeaderSkeleton, ErrorBanner } from "./lib/components";
 
-const client = new ApolloClient({ uri: "/api", cache: new InMemoryCache() });
+const httpLink = new HttpLink({ uri: "/api" });
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+  operation.setContext({
+    headers: { authorization: sessionStorage.getItem("token") || null },
+  });
+
+  return forward(operation);
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: concat(authMiddleware, httpLink),
+});
 
 const initialViewer: Viewer = {
   id: null,
@@ -45,6 +61,12 @@ const App = () => {
     onCompleted: (data) => {
       if (data && data.logIn) {
         setViewer(data.logIn);
+
+        if (data.logIn.token) {
+          sessionStorage.setItem("token", data.logIn.token);
+        } else {
+          sessionStorage.removeItem("token");
+        }
       }
     },
   });
