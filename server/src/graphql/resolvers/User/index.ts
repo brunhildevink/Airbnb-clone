@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { IResolvers } from "apollo-server-express";
-import { Booking, Database, User } from "../../../lib/types";
+import { Database, User } from "../../../lib/types";
 import { authorize } from "../../../lib/utils";
 import {
   UserArgs,
@@ -18,7 +18,7 @@ export const userResolvers: IResolvers = {
       { db, req }: { db: Database; req: Request }
     ): Promise<User> => {
       try {
-        const user = await db.users.findOne({ id: id });
+        const user = await db.users.findOne({ _id: id });
 
         if (!user) {
           throw new Error("user can't be found");
@@ -80,7 +80,7 @@ export const userResolvers: IResolvers = {
       user: User,
       { limit, page }: UserListingsArgs,
       { db }: { db: Database }
-    ): Promise<UserListingsData> => {
+    ): Promise<UserListingsData | null> => {
       try {
         const data: UserListingsData = {
           total: 0,
