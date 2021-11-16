@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { useQuery } from "@apollo/client";
 import { Col, Layout, Row } from "antd";
@@ -8,7 +8,7 @@ import {
   User as UserData,
   UserVariables,
 } from "../../lib/graphql/queries/User/__generated__/User";
-import { UserProfile } from "./components/";
+import { UserBookings, UserListings, UserProfile } from "./components/";
 import { ErrorBanner, PageSkeleton } from "../../lib/components";
 import { Viewer } from "../../lib/types";
 
@@ -24,17 +24,45 @@ export const User = ({
   match,
   viewer,
 }: Props & RouteComponentProps<MatchParams>) => {
+  const [listingsPage, setListingsPage] = useState<number>(1);
+  const [bookingsPage, setBookingsPage] = useState<number>(1);
+  const PAGE_LIMIT: number = 4;
   const { Content } = Layout;
   const { data, error, loading } = useQuery<UserData, UserVariables>(USER, {
     variables: {
       id: match.params.id,
+      bookingsPage,
+      listingsPage,
+      limit: PAGE_LIMIT,
     },
   });
 
   const user = data ? data.user : null;
   const viewerIsUser = viewer.id === match.params.id;
+
+  const userListings = user ? user.listings : null;
+  const userBookings = user ? user.bookings : null;
+
   const userProfileElement = user ? (
     <UserProfile user={user} viewerIsUser={viewerIsUser} />
+  ) : null;
+
+  const userListingsElement = userListings ? (
+    <UserListings
+      userListings={userListings}
+      listingsPage={listingsPage}
+      limit={PAGE_LIMIT}
+      setListingsPage={setListingsPage}
+    />
+  ) : null;
+
+  const userBookingsElement = userBookings ? (
+    <UserBookings
+      userBookings={userBookings}
+      bookingsPage={bookingsPage}
+      limit={PAGE_LIMIT}
+      setBookingsPage={setBookingsPage}
+    />
   ) : null;
 
   if (loading) {
@@ -57,6 +85,8 @@ export const User = ({
     <Content className="user">
       <Row gutter={12} justify="space-between">
         <Col xs={24}>{userProfileElement}</Col>
+        <Col xs={24}>{userListingsElement}</Col>
+        <Col xs={24}>{userBookingsElement}</Col>
       </Row>
     </Content>
   );

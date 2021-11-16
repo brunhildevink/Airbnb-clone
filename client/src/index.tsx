@@ -1,19 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
-import { render } from "react-dom";
+import { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import {
   ApolloClient,
-  ApolloLink,
   ApolloProvider,
-  concat,
   HttpLink,
+  ApolloLink,
   InMemoryCache,
+  concat,
   useMutation,
 } from "@apollo/client";
-
-import reportWebVitals from "./reportWebVitals";
-import { Affix, Layout, Spin } from "antd";
-import { Viewer } from "./lib/types";
+import { Affix, Spin, Layout } from "antd";
 import {
   AppHeader,
   Home,
@@ -24,20 +21,24 @@ import {
   NotFound,
   User,
 } from "./sections";
+import { AppHeaderSkeleton, ErrorBanner } from "./lib/components";
 import { LOG_IN } from "./lib/graphql/mutations";
 import {
   LogIn as LogInData,
   LogInVariables,
 } from "./lib/graphql/mutations/LogIn/__generated__/LogIn";
+import { Viewer } from "./lib/types";
+import reportWebVitals from "./reportWebVitals";
 import "./styles/index.css";
-import { AppHeaderSkeleton, ErrorBanner } from "./lib/components";
 
 const httpLink = new HttpLink({ uri: "/api" });
-
 const authMiddleware = new ApolloLink((operation, forward) => {
-  operation.setContext({
-    headers: { authorization: sessionStorage.getItem("token") || null },
-  });
+  operation.setContext(({ headers = {} }) => ({
+    headers: {
+      ...headers,
+      "X-CSRF-TOKEN": sessionStorage.getItem("token") || "",
+    },
+  }));
 
   return forward(operation);
 });
@@ -59,7 +60,7 @@ const App = () => {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
   const [logIn, { error }] = useMutation<LogInData, LogInVariables>(LOG_IN, {
     onCompleted: (data) => {
-      if (data && data.logIn) {
+      if (data?.logIn) {
         setViewer(data.logIn);
 
         if (data.logIn.token) {
@@ -78,14 +79,12 @@ const App = () => {
   }, []);
 
   if (!viewer.didRequest && !error) {
-    return (
-      <Layout className="app-skeleton">
-        <AppHeaderSkeleton />
-        <div className="app-skeleton__spin-section">
-          <Spin size="large" tip="Launching Tinyhouse" />
-        </div>
-      </Layout>
-    );
+    <Layout className="app-skeleton">
+      <AppHeaderSkeleton />
+      <div className="app-skeleton__spin-section">
+        <Spin size="large" tip="Launching TinyHouse" />
+      </div>
+    </Layout>;
   }
 
   const logInErrorBannerElement = error ? (
@@ -121,12 +120,10 @@ const App = () => {
   );
 };
 
-render(
-  <React.StrictMode>
-    <ApolloProvider client={client}>
-      <App />
-    </ApolloProvider>
-  </React.StrictMode>,
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>,
   document.getElementById("root")
 );
 
