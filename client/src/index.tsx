@@ -58,13 +58,10 @@ const initialViewer: Viewer = {
 
 const App = () => {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
-  const [hasFinishedLoginRequest, setHasFinishedLoginRequest] =
-    useState<boolean>(false);
+
   const [logIn, { error }] = useMutation<LogInData, LogInVariables>(LOG_IN, {
     onCompleted: (data) => {
       if (data?.logIn) {
-        setViewer(data.logIn);
-
         if (data.logIn.token) {
           sessionStorage.setItem("token", data.logIn.token);
         } else {
@@ -72,7 +69,7 @@ const App = () => {
         }
       }
 
-      setHasFinishedLoginRequest(true);
+      setViewer(data.logIn); // but here
     },
   });
 
@@ -83,12 +80,14 @@ const App = () => {
   }, []);
 
   if (!viewer.didRequest && !error) {
-    <Layout className="app-skeleton">
-      <AppHeaderSkeleton />
-      <div className="app-skeleton__spin-section">
-        <Spin size="large" tip="Launching TinyHouse" />
-      </div>
-    </Layout>;
+    return (
+      <Layout className="app-skeleton">
+        <AppHeaderSkeleton />
+        <div className="app-skeleton__spin-section">
+          <Spin size="large" tip="Launching TinyHouse" />
+        </div>
+      </Layout>
+    );
   }
 
   const logInErrorBannerElement = error ? (
@@ -96,35 +95,31 @@ const App = () => {
   ) : null;
 
   return (
-    <>
-      {hasFinishedLoginRequest && (
-        <Router>
-          <Layout id="app">
-            {logInErrorBannerElement}
-            <Affix offsetTop={0} className="app__affix-header">
-              <AppHeader viewer={viewer} setViewer={setViewer} />
-            </Affix>
-            <Switch>
-              <Route exact path="/" component={Home} />
-              <Route exact path="/host" render={(props) => <Host />} />
-              <Route exact path="/listing/:id" component={Listing} />
-              <Route exact path="/listings/:location?" component={Listings} />
-              <Route
-                exact
-                path="/login"
-                render={(props) => <Login {...props} setViewer={setViewer} />}
-              />
-              <Route
-                exact
-                path="/user/:id"
-                render={(props) => <User {...props} viewer={viewer} />}
-              />
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-        </Router>
-      )}
-    </>
+    <Router>
+      <Layout id="app">
+        {logInErrorBannerElement}
+        <Affix offsetTop={0} className="app__affix-header">
+          <AppHeader viewer={viewer} setViewer={setViewer} />
+        </Affix>
+        <Switch>
+          <Route exact path="/" component={Home} />
+          <Route exact path="/host" render={(props) => <Host />} />
+          <Route exact path="/listing/:id" component={Listing} />
+          <Route exact path="/listings/:location?" component={Listings} />
+          <Route
+            exact
+            path="/login"
+            render={(props) => <Login {...props} setViewer={setViewer} />}
+          />
+          <Route
+            exact
+            path="/user/:id"
+            render={(props) => <User {...props} viewer={viewer} />}
+          />
+          <Route component={NotFound} />
+        </Switch>
+      </Layout>
+    </Router>
   );
 };
 
@@ -135,7 +130,4 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
