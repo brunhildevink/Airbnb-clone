@@ -69,7 +69,7 @@ const App = () => {
         }
       }
 
-      setViewer(data.logIn); // but here
+      setViewer(data.logIn);
     },
   });
 
