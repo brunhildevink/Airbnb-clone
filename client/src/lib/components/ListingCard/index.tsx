@@ -1,5 +1,7 @@
 import { Card, Typography } from "antd";
+import { Link } from "react-router-dom";
 import { UserOutlined } from "@ant-design/icons";
+import { formatListingPrice, iconColor } from "../../utils";
 
 interface Props {
   listing: {
@@ -15,35 +17,37 @@ interface Props {
 const { Text, Title } = Typography;
 
 export const ListingCard = ({ listing }: Props): JSX.Element => {
-  const { title, image, address, price, numOfGuests } = listing;
+  const { id, title, image, address, price, numOfGuests } = listing;
 
   const cardImage: React.CSSProperties = {
     backgroundImage: `url(${image})`,
   };
 
   return (
-    <Card
-      hoverable
-      cover={<div style={cardImage} className="listing-card__cover-img" />}
-    >
-      <div className="listing-card__details">
-        <div className="listing-card__description">
-          <Title level={4} className="listing-card__price">
-            {price}
-            <span>/day</span>
-          </Title>
-          <Text strong ellipsis className="listing-card__title">
-            {title}
-          </Text>
-          <Text strong ellipsis className="listing-card__address">
-            {address}
-          </Text>
+    <Link to={`/listing/${id}`}>
+      <Card
+        hoverable
+        cover={<div style={cardImage} className="listing-card__cover-img" />}
+      >
+        <div className="listing-card__details">
+          <div className="listing-card__description">
+            <Title level={4} className="listing-card__price">
+              {formatListingPrice(price)}
+              <span>/day</span>
+            </Title>
+            <Text strong ellipsis className="listing-card__title">
+              {title}
+            </Text>
+            <Text ellipsis className="listing-card__address">
+              {address}
+            </Text>
+          </div>
+          <div className="listing-card__dimensions listing-card__dimensions--guests">
+            <UserOutlined color={iconColor} />
+            <Text>{numOfGuests} guests</Text>
+          </div>
         </div>
-        <div className="listing-card__dimensions listing-card__dimensions--guests">
-          <UserOutlined />
-          <Text>{numOfGuests} guests</Text>
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 };
