@@ -11,15 +11,5 @@ export const authorize = async (
     token,
   });
 
-  console.log("-------");
-
-  console.log(`client token: ${token}`);
-
-  const test = await db.users.findOne({
-    _id: req.signedCookies.viewer,
-  });
-
-  console.log(`server token: ${test?.token}`);
-
   return viewer;
 };
