@@ -47,6 +47,7 @@ export const listingResolvers: IResolvers = {
         const query: ListingsQuery = {};
 
         const data: ListingsData = {
+          region: null,
           total: 0,
           result: [],
         };
