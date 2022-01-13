@@ -23,11 +23,12 @@ export const listingResolvers: IResolvers = {
     ): Promise<Listing> => {
       try {
         const listing = await db.listings.findOne({ _id: new ObjectId(id) });
-        const viewer = await authorize(db, req);
 
         if (!listing) {
           throw new Error("listing can't be found");
         }
+
+        const viewer = await authorize(db, req);
 
         if (viewer && viewer._id === listing.host) {
           listing.authorized = true;
@@ -45,7 +46,6 @@ export const listingResolvers: IResolvers = {
     ): Promise<ListingsData> => {
       try {
         const query: ListingsQuery = {};
-
         const data: ListingsData = {
           region: null,
           total: 0,
@@ -53,14 +53,19 @@ export const listingResolvers: IResolvers = {
         };
 
         if (location) {
-          const { admin, city, country } = await Google.geocode(location);
+          const { country, admin, city } = await Google.geocode(location);
 
-          if (admin) query.admin = admin;
           if (city) query.city = city;
-          if (country) query.country = country;
-          else {
-            throw new Error("No country found");
+          if (admin) query.admin = admin;
+          if (country) {
+            query.country = country;
+          } else {
+            throw new Error("no country found");
           }
+
+          const cityText = city ? `${city}, ` : "";
+          const adminText = admin ? `${admin}, ` : "";
+          data.region = `${cityText}${adminText}${country}`;
         }
 
         let cursor = await db.listings.find(query);
@@ -97,7 +102,7 @@ export const listingResolvers: IResolvers = {
       const host = await db.users.findOne({ _id: listing.host });
 
       if (!host) {
-        throw new Error("Host can't be found");
+        throw new Error("host can't be found");
       }
 
       return host;
@@ -132,7 +137,7 @@ export const listingResolvers: IResolvers = {
 
         return data;
       } catch (error) {
-        throw new Error(`Failed to query user bookings: ${error}`);
+        throw new Error(`Failed to query listing bookings: ${error}`);
       }
     },
   },

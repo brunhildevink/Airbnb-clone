@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { Link, RouteComponentProps } from "react-router-dom";
 import { Affix, Layout, List, Typography } from "antd";
@@ -24,11 +24,13 @@ interface MatchParams {
 }
 
 export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
+  const locationRef = useRef(match.params.location);
   const [filter, setFilter] = useState(ListingsFilter.PRICE_LOW_TO_HIGH);
   const [page, setPage] = useState(1);
   const { loading, data, error } = useQuery<ListingsData, ListingsVariables>(
     LISTINGS,
     {
+      skip: locationRef.current !== match.params.location && page !== 1,
       variables: {
         location: match.params.location,
         filter,
@@ -37,6 +39,10 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
       },
     }
   );
+
+  useEffect(() => {
+    setPage(1);
+  }, [match.params.location]);
 
   const listings = data ? data.listings : null;
   const listingsRegion = listings ? listings.region : null;
@@ -59,6 +65,7 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
             xs: 1,
             sm: 2,
             lg: 4,
+            xl: 4,
           }}
           dataSource={listings.result}
           renderItem={(listing) => (
@@ -81,11 +88,11 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
       </div>
     );
 
-  const listingsRegionElement = listingsRegion ? (
+  const listingsRegionElement = (
     <Title level={3} className="listings__title">
       Results for "{listingsRegion}"
     </Title>
-  ) : null;
+  );
 
   if (loading) {
     return (
