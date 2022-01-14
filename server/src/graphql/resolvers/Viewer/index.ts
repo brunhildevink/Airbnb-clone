@@ -125,6 +125,12 @@ export const viewerResolvers: IResolvers = {
     },
   },
   Mutation: {
+    connectStripe: (): Viewer => {
+      return { didRequest: true };
+    },
+    disconnectStripe: (): Viewer => {
+      return { didRequest: true };
+    },
     logIn: async (
       _root: undefined,
       { input }: LogInArgs,
