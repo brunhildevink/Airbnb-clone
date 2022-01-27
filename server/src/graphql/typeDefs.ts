@@ -87,10 +87,20 @@ export const typeDefs = gql`
     logOut: Viewer!
     connectStripe(input: ConnectStripeInput!): Viewer!
     disconnectStripe: Viewer!
-    hostListing: String!
+    hostListing(input: HostListingInput!): Listing!
   }
 
   input ConnectStripeInput {
     code: String!
+  }
+
+  input HostListingInput {
+    title: String!
+    description: String!
+    image: String!
+    type: ListingType!
+    address: String!
+    price: Int!
+    numOfGuests: Int!
   }
 `;
