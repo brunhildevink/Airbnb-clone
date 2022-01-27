@@ -141,4 +141,9 @@ export const listingResolvers: IResolvers = {
       }
     },
   },
+  Mutation: {
+    hostListing: () => {
+      return "Mutation.hostListing";
+    },
+  },
 };
