@@ -10,6 +10,11 @@ dotenv.config();
 const mount = async (app: Application) => {
   const db = await connectDatabase();
 
+  // mock response needed for image uploader
+  app.post("/statusDone", function (_req, res) {
+    res.send({ status: "done" });
+  });
+
   app.use(cookieParser(process.env.SECRET));
 
   const server = new ApolloServer({
