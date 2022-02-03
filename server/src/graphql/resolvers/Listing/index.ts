@@ -1,7 +1,7 @@
 import { IResolvers } from "apollo-server-express";
 import { Request } from "express";
 import { ObjectId } from "mongodb";
-import { Google } from "../../../lib/api";
+import { Cloudinary, Google } from "../../../lib/api";
 import { Database, Listing, ListingType, User } from "../../../lib/types";
 import {
   ListingsQuery,
@@ -169,6 +169,8 @@ export const listingResolvers: IResolvers = {
       { input }: HostListingArgs,
       { db, req }: { db: Database; req: Request }
     ): Promise<Listing> => {
+      verifyHostListingInput(input);
+
       const viewer = await authorize(db, req);
 
       if (!viewer) {
@@ -181,9 +183,12 @@ export const listingResolvers: IResolvers = {
         throw new Error("invalid address input");
       }
 
+      const imageUrl = await Cloudinary.upload(input.image);
+
       const insertResult = await db.listings.insertOne({
         _id: new ObjectId(),
         ...input,
+        image: imageUrl,
         bookings: [],
         bookingsIndex: {},
         country,
