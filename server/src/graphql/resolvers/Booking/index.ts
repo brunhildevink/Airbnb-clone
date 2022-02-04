@@ -12,7 +12,7 @@ export const bookingResolvers: IResolvers = {
       _root: undefined,
       { input }: CreateBookingArgs,
       { db, req }: { db: Database; req: Request }
-    ): Promise<string> => {
+    ): Promise<Booking> => {
       try {
         const { id, source, checkIn, checkOut } = input;
 
@@ -91,7 +91,7 @@ export const bookingResolvers: IResolvers = {
           }
         );
 
-        return insertedBooking._id.toString();
+        return insertedBooking;
       } catch (error) {
         throw new Error(`Failed to create a booking: ${error}`);
       }
