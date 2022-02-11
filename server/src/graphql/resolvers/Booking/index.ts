@@ -1,10 +1,54 @@
 import { IResolvers } from "apollo-server-express";
 import { Request } from "express";
 import { ObjectId } from "mongodb";
-import { Booking, Database, Listing } from "../../../lib/types";
+import {
+  Booking,
+  BookingsIndex,
+  Database,
+  Listing,
+  User,
+} from "../../../lib/types";
 import { CreateBookingArgs } from "./types";
 import { authorize } from "../../../lib/utils";
 import { Stripe } from "../../../lib/api";
+
+export const resolveBookingsIndex = (
+  bookingsIndex: BookingsIndex,
+  checkInDate: string,
+  checkOutDate: string
+): BookingsIndex => {
+  let dateCursor = new Date(checkInDate);
+
+  const checkOut = new Date(checkOutDate);
+  const newBookingsIndex: BookingsIndex = { ...bookingsIndex };
+  const day = 86400000;
+
+  while (dateCursor <= checkOut) {
+    const y = dateCursor.getUTCFullYear();
+    const m = dateCursor.getUTCMonth();
+    const d = dateCursor.getUTCDay();
+
+    if (!newBookingsIndex[y]) {
+      newBookingsIndex[y] = {};
+    }
+
+    if (!newBookingsIndex[y][m]) {
+      newBookingsIndex[y][m] = {};
+    }
+
+    if (!newBookingsIndex[y][m][d]) {
+      newBookingsIndex[y][m][d] = true;
+    } else {
+      throw new Error(
+        "selected dates can't overlap dates that have already been booked"
+      );
+    }
+
+    dateCursor = new Date(dateCursor.getTime() + day);
+  }
+
+  return newBookingsIndex;
+};
 
 export const bookingResolvers: IResolvers = {
   Mutation: {
@@ -41,11 +85,11 @@ export const bookingResolvers: IResolvers = {
           throw new Error("check out date cannot be before check in date");
         }
 
-        // const bookingsIndex = resolveBookingsIndex(
-        //   listing.bookingsIndex,
-        //   checkIn,
-        //   checkOut
-        // );
+        const bookingsIndex = resolveBookingsIndex(
+          listing.bookingsIndex,
+          checkIn,
+          checkOut
+        );
 
         const totalPrice =
           listing.price *
@@ -86,7 +130,7 @@ export const bookingResolvers: IResolvers = {
         await db.listings.updateOne(
           { _id: listing._id },
           {
-            // $set: { bookingsIndex },
+            $set: { bookingsIndex },
             $push: { bookings: insertedBooking._id },
           }
         );
@@ -107,6 +151,13 @@ export const bookingResolvers: IResolvers = {
       { db }: { db: Database }
     ): Promise<Listing | null> => {
       return db.listings.findOne({ _id: booking.listing });
+    },
+    tenant: (
+      booking: Booking,
+      _args: Record<string, unknown>,
+      { db }: { db: Database }
+    ): Promise<User | null> => {
+      return db.users.findOne({ _id: booking.tenant });
     },
   },
 };
