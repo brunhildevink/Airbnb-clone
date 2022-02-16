@@ -3,6 +3,7 @@ import { RouteComponentProps } from "react-router";
 import { useQuery } from "@apollo/client";
 import { Col, Layout, Row } from "antd";
 import { Moment } from "moment";
+
 import { ErrorBanner } from "../../lib/components/ErrorBanner";
 import { PageSkeleton } from "../../lib/components/PageSkeleton";
 import { LISTING } from "../../lib/graphql/queries";
@@ -15,12 +16,20 @@ import {
   ListingBookings,
   ListingDetails,
 } from "./components";
+import { Viewer } from "../../lib/types";
 
 interface MatchParams {
   id: string;
 }
 
-export const Listing = ({ match }: RouteComponentProps<MatchParams>) => {
+interface Props {
+  viewer: Viewer;
+}
+
+export const Listing = ({
+  match,
+  viewer,
+}: Props & RouteComponentProps<MatchParams>) => {
   const { Content } = Layout;
   const PAGE_LIMIT = 3;
   const [checkInDate, setCheckInDate] = useState<Moment | null>(null);
@@ -55,11 +64,14 @@ export const Listing = ({ match }: RouteComponentProps<MatchParams>) => {
 
   const listingCreateBookingElement = listing ? (
     <ListingCreateBooking
-      price={listing.price}
+      bookingsIndex={listing.bookingsIndex}
       checkInDate={checkInDate}
       checkOutDate={checkOutDate}
+      host={listing.host}
+      price={listing.price}
       setCheckInDate={setCheckInDate}
       setCheckOutDate={setCheckOutDate}
+      viewer={viewer}
     />
   ) : null;
 
