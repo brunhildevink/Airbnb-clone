@@ -17,6 +17,7 @@ interface Props {
   price: number;
   setCheckInDate: (checkInDate: Moment | null) => void;
   setCheckOutDate: (checkOutDate: Moment | null) => void;
+  setModalVisible: (modalVisible: boolean) => void;
   viewer: Viewer;
 }
 
@@ -28,6 +29,7 @@ export const ListingCreateBooking = ({
   price,
   setCheckInDate,
   setCheckOutDate,
+  setModalVisible,
   viewer,
 }: Props) => {
   const bookingsIndexJSON: BookingsIndex = JSON.parse(bookingsIndex);
@@ -71,14 +73,16 @@ export const ListingCreateBooking = ({
 
     setCheckOutDate(selectedCheckOutDate);
 
-    const year = moment(dateCursor).year();
-    const month = moment(dateCursor).month();
-    const day = moment(dateCursor).date();
+    const year = moment(dateCursor).year().toString();
+    const month = moment(dateCursor).month().toString();
+    const day = moment(dateCursor).date().toString();
+
+    console.log(bookingsIndexJSON[year][month]);
 
     if (
       bookingsIndexJSON[year] &&
       bookingsIndexJSON[year][month] &&
-      bookingsIndex[year][month][day]
+      bookingsIndexJSON[year][month][day]
     ) {
       return displayErrorMessage(
         "You can't book a period of time that overlaps existing bookings. Please try again!"
@@ -143,6 +147,7 @@ export const ListingCreateBooking = ({
           size="large"
           type="primary"
           className="listing-booking__card-cta"
+          onClick={() => setModalVisible(true)}
         >
           Request to book!
         </Button>

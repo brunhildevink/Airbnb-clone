@@ -4,8 +4,7 @@ import { useQuery } from "@apollo/client";
 import { Col, Layout, Row } from "antd";
 import { Moment } from "moment";
 
-import { ErrorBanner } from "../../lib/components/ErrorBanner";
-import { PageSkeleton } from "../../lib/components/PageSkeleton";
+import { ErrorBanner, PageSkeleton } from "../../lib/components";
 import { LISTING } from "../../lib/graphql/queries";
 import {
   Listing as ListingData,
@@ -14,6 +13,7 @@ import {
 import {
   ListingCreateBooking,
   ListingBookings,
+  ListingCreateBookingModal,
   ListingDetails,
 } from "./components";
 import { Viewer } from "../../lib/types";
@@ -35,6 +35,7 @@ export const Listing = ({
   const [checkInDate, setCheckInDate] = useState<Moment | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<Moment | null>(null);
   const [bookingsPage, setBookingsPage] = useState<number>(1);
+  const [modalVisible, setModalVisible] = useState(false);
   const { data, error, loading } = useQuery<ListingData, ListingVariables>(
     LISTING,
     {
@@ -71,9 +72,21 @@ export const Listing = ({
       price={listing.price}
       setCheckInDate={setCheckInDate}
       setCheckOutDate={setCheckOutDate}
+      setModalVisible={setModalVisible}
       viewer={viewer}
     />
   ) : null;
+
+  const listingCreateBookingModalElement =
+    listing && checkInDate && checkOutDate ? (
+      <ListingCreateBookingModal
+        checkInDate={checkInDate}
+        checkOutDate={checkOutDate}
+        price={listing.price}
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+      />
+    ) : null;
 
   if (loading) {
     return (
@@ -103,6 +116,7 @@ export const Listing = ({
           {listingCreateBookingElement}
         </Col>
       </Row>
+      {listingCreateBookingModalElement}
     </Content>
   );
 };
