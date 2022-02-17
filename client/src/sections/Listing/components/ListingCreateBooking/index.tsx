@@ -2,9 +2,9 @@ import React from "react";
 import { Button, Card, DatePicker, Divider, Typography } from "antd";
 import moment, { Moment } from "moment";
 
+import { Listing as ListingData } from "../../../../lib/graphql/queries/Listing/__generated__/Listing";
 import { displayErrorMessage, formatListingPrice } from "../../../../lib/utils";
 import { Viewer } from "../../../../lib/types";
-import { Listing as ListingData } from "../../../../lib/graphql/queries/Listing/__generated__/Listing";
 import { BookingsIndex } from "./types";
 
 const { Paragraph, Text, Title } = Typography;
@@ -34,7 +34,7 @@ export const ListingCreateBooking = ({
 }: Props) => {
   const bookingsIndexJSON: BookingsIndex = JSON.parse(bookingsIndex);
 
-  const dateIsBooked = (currentDate: Moment): boolean => {
+  const dateIsBooked = (currentDate: Moment) => {
     const year = moment(currentDate).year();
     const month = moment(currentDate).month();
     const day = moment(currentDate).date();
@@ -63,31 +63,31 @@ export const ListingCreateBooking = ({
           `You can't book date of check out to be prior to check in!`
         );
       }
-    }
 
-    let dateCursor = checkInDate;
+      let dateCursor = checkInDate;
 
-    while (moment(dateCursor).isBefore(selectedCheckOutDate, "days")) {
-      dateCursor = moment(dateCursor).add(1, "days");
+      while (moment(dateCursor).isBefore(selectedCheckOutDate, "days")) {
+        dateCursor = moment(dateCursor).add(1, "days");
+
+        const year = moment(dateCursor).year();
+        const month = moment(dateCursor).month();
+        const day = moment(dateCursor).date();
+
+        console.log(year, month, day);
+
+        if (
+          bookingsIndexJSON[year] &&
+          bookingsIndexJSON[year][month] &&
+          bookingsIndexJSON[year][month][day]
+        ) {
+          return displayErrorMessage(
+            "You can't book a period of time that overlaps existing bookings. Please try again!"
+          );
+        }
+      }
     }
 
     setCheckOutDate(selectedCheckOutDate);
-
-    const year = moment(dateCursor).year().toString();
-    const month = moment(dateCursor).month().toString();
-    const day = moment(dateCursor).date().toString();
-
-    console.log(bookingsIndexJSON[year][month]);
-
-    if (
-      bookingsIndexJSON[year] &&
-      bookingsIndexJSON[year][month] &&
-      bookingsIndexJSON[year][month][day]
-    ) {
-      return displayErrorMessage(
-        "You can't book a period of time that overlaps existing bookings. Please try again!"
-      );
-    }
   };
 
   const viewerIsHost = viewer.id === host.id;
@@ -103,7 +103,7 @@ export const ListingCreateBooking = ({
     buttonMessage = "You can't book your own listing!";
   } else if (!host.hasWallet) {
     buttonMessage =
-      "The host has disconnected from Stripe and thus won't be able to receive payments.";
+      "The host has disconnected from Stripe and thus won't be able to receive payments!";
   }
 
   return (
@@ -123,10 +123,10 @@ export const ListingCreateBooking = ({
               disabled={checkInInputDisabled}
               disabledDate={disabledDate}
               format={"YYYY/MM/DD"}
-              onOpenChange={() => setCheckOutDate(null)}
               onChange={(dateValue) => setCheckInDate(dateValue)}
+              onOpenChange={() => setCheckOutDate(null)}
               showToday={false}
-              value={checkInDate ? checkInDate : undefined}
+              value={checkInDate || undefined}
             />
           </div>
           <div className="listing-booking__card-date-picker">
@@ -135,9 +135,9 @@ export const ListingCreateBooking = ({
               disabled={checkOutInputDisabled}
               disabledDate={disabledDate}
               format={"YYYY/MM/DD"}
-              value={checkOutDate ? checkOutDate : undefined}
               onChange={(dateValue) => verifyAndSetCheckOutDate(dateValue)}
               showToday={false}
+              value={checkOutDate || undefined}
             />
           </div>
         </div>
