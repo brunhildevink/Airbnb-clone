@@ -1,22 +1,21 @@
 import React, { useState } from "react";
-import { RouteComponentProps } from "react-router";
+import { RouteComponentProps } from "react-router-dom";
 import { useQuery } from "@apollo/client";
 import { Col, Layout, Row } from "antd";
 import { Moment } from "moment";
-
 import { ErrorBanner, PageSkeleton } from "../../lib/components";
 import { LISTING } from "../../lib/graphql/queries";
 import {
   Listing as ListingData,
   ListingVariables,
 } from "../../lib/graphql/queries/Listing/__generated__/Listing";
+import { Viewer } from "../../lib/types";
 import {
-  ListingCreateBooking,
   ListingBookings,
+  ListingCreateBooking,
   WrappedListingCreateBookingModal as ListingCreateBookingModal,
   ListingDetails,
 } from "./components";
-import { Viewer } from "../../lib/types";
 
 interface MatchParams {
   id: string;
@@ -26,16 +25,18 @@ interface Props {
   viewer: Viewer;
 }
 
+const { Content } = Layout;
+const PAGE_LIMIT = 3;
+
 export const Listing = ({
-  match,
   viewer,
+  match,
 }: Props & RouteComponentProps<MatchParams>) => {
-  const { Content } = Layout;
-  const PAGE_LIMIT = 3;
+  const [bookingsPage, setBookingsPage] = useState(1);
   const [checkInDate, setCheckInDate] = useState<Moment | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<Moment | null>(null);
-  const [bookingsPage, setBookingsPage] = useState<number>(1);
   const [modalVisible, setModalVisible] = useState(false);
+
   const { loading, data, error, refetch } = useQuery<
     ListingData,
     ListingVariables
@@ -47,9 +48,6 @@ export const Listing = ({
     },
   });
 
-  const listing = data ? data.listing : null;
-  const listingBookings = listing ? listing.bookings : null;
-
   const clearBookingData = () => {
     setModalVisible(false);
     setCheckInDate(null);
@@ -59,47 +57,6 @@ export const Listing = ({
   const handleListingRefetch = async () => {
     await refetch();
   };
-
-  const listingDetailsElement = listing ? (
-    <ListingDetails listing={listing} />
-  ) : null;
-
-  const listingBookingsElement = listingBookings ? (
-    <ListingBookings
-      listingBookings={listingBookings}
-      bookingsPage={bookingsPage}
-      limit={PAGE_LIMIT}
-      setBookingsPage={setBookingsPage}
-    />
-  ) : null;
-
-  const listingCreateBookingElement = listing ? (
-    <ListingCreateBooking
-      bookingsIndex={listing.bookingsIndex}
-      checkInDate={checkInDate}
-      checkOutDate={checkOutDate}
-      host={listing.host}
-      price={listing.price}
-      setCheckInDate={setCheckInDate}
-      setCheckOutDate={setCheckOutDate}
-      setModalVisible={setModalVisible}
-      viewer={viewer}
-    />
-  ) : null;
-
-  const listingCreateBookingModalElement =
-    listing && checkInDate && checkOutDate ? (
-      <ListingCreateBookingModal
-        checkInDate={checkInDate}
-        checkOutDate={checkOutDate}
-        clearBookingData={clearBookingData}
-        handleListingRefetch={handleListingRefetch}
-        id={listing.id}
-        modalVisible={modalVisible}
-        price={listing.price}
-        setModalVisible={setModalVisible}
-      />
-    ) : null;
 
   if (loading) {
     return (
@@ -117,6 +74,50 @@ export const Listing = ({
       </Content>
     );
   }
+
+  const listing = data ? data.listing : null;
+  const listingBookings = listing ? listing.bookings : null;
+
+  const listingDetailsElement = listing ? (
+    <ListingDetails listing={listing} />
+  ) : null;
+
+  const listingBookingsElement = listingBookings ? (
+    <ListingBookings
+      listingBookings={listingBookings}
+      bookingsPage={bookingsPage}
+      limit={PAGE_LIMIT}
+      setBookingsPage={setBookingsPage}
+    />
+  ) : null;
+
+  const listingCreateBookingElement = listing ? (
+    <ListingCreateBooking
+      viewer={viewer}
+      host={listing.host}
+      price={listing.price}
+      bookingsIndex={listing.bookingsIndex}
+      checkInDate={checkInDate}
+      checkOutDate={checkOutDate}
+      setCheckInDate={setCheckInDate}
+      setCheckOutDate={setCheckOutDate}
+      setModalVisible={setModalVisible}
+    />
+  ) : null;
+
+  const listingCreateBookingModalElement =
+    listing && checkInDate && checkOutDate ? (
+      <ListingCreateBookingModal
+        id={listing.id}
+        price={listing.price}
+        modalVisible={modalVisible}
+        checkInDate={checkInDate}
+        checkOutDate={checkOutDate}
+        setModalVisible={setModalVisible}
+        clearBookingData={clearBookingData}
+        handleListingRefetch={handleListingRefetch}
+      />
+    ) : null;
 
   return (
     <Content className="listings">
