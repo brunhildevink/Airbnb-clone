@@ -1,32 +1,26 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/ban-types */
 import { IResolvers } from "apollo-server-express";
 import { Request } from "express";
 import { ObjectId } from "mongodb";
-import {
-  Booking,
-  BookingsIndex,
-  Database,
-  Listing,
-  User,
-} from "../../../lib/types";
-import { CreateBookingArgs } from "./types";
-import { authorize } from "../../../lib/utils";
 import { Stripe } from "../../../lib/api";
+import { Database, Listing, Booking, BookingsIndex } from "../../../lib/types";
+import { authorize } from "../../../lib/utils";
+import { CreateBookingArgs } from "./types";
 
-export const resolveBookingsIndex = (
+const resolveBookingsIndex = (
   bookingsIndex: BookingsIndex,
   checkInDate: string,
   checkOutDate: string
 ): BookingsIndex => {
   let dateCursor = new Date(checkInDate);
-
   const checkOut = new Date(checkOutDate);
   const newBookingsIndex: BookingsIndex = { ...bookingsIndex };
-  const day = 86400000;
 
   while (dateCursor <= checkOut) {
     const y = dateCursor.getUTCFullYear();
     const m = dateCursor.getUTCMonth();
-    const d = dateCursor.getUTCDay();
+    const d = dateCursor.getUTCDate();
 
     if (!newBookingsIndex[y]) {
       newBookingsIndex[y] = {};
@@ -44,7 +38,7 @@ export const resolveBookingsIndex = (
       );
     }
 
-    dateCursor = new Date(dateCursor.getTime() + day);
+    dateCursor = new Date(dateCursor.getTime() + 86400000);
   }
 
   return newBookingsIndex;
@@ -61,7 +55,6 @@ export const bookingResolvers: IResolvers = {
         const { id, source, checkIn, checkOut } = input;
 
         const viewer = await authorize(db, req);
-
         if (!viewer) {
           throw new Error("viewer cannot be found");
         }
@@ -69,20 +62,19 @@ export const bookingResolvers: IResolvers = {
         const listing = await db.listings.findOne({
           _id: new ObjectId(id),
         });
-
         if (!listing) {
-          throw new Error("listing cannot be found");
+          throw new Error("listing can't be found");
         }
 
         if (listing.host === viewer._id) {
-          throw new Error("viewer cannot book own listing");
+          throw new Error("viewer can't book own listing");
         }
 
         const checkInDate = new Date(checkIn);
         const checkOutDate = new Date(checkOut);
 
         if (checkOutDate < checkInDate) {
-          throw new Error("check out date cannot be before check in date");
+          throw new Error("check out date can't be before check in date");
         }
 
         const bookingsIndex = resolveBookingsIndex(
@@ -101,7 +93,7 @@ export const bookingResolvers: IResolvers = {
 
         if (!host || !host.walletId) {
           throw new Error(
-            "the host either cannot be found or is not connected with Stripe"
+            "the host either can't be found or is not connected with Stripe"
           );
         }
 
@@ -118,17 +110,27 @@ export const bookingResolvers: IResolvers = {
         const insertedBooking: Booking = insertRes.ops[0];
 
         await db.users.updateOne(
-          { _id: host._id },
-          { $inc: { income: totalPrice } }
+          {
+            _id: host._id,
+          },
+          {
+            $inc: { income: totalPrice },
+          }
         );
 
         await db.users.updateOne(
-          { _id: viewer._id },
-          { $push: { bookings: insertedBooking._id } }
+          {
+            _id: viewer._id,
+          },
+          {
+            $push: { bookings: insertedBooking._id },
+          }
         );
 
         await db.listings.updateOne(
-          { _id: listing._id },
+          {
+            _id: listing._id,
+          },
           {
             $set: { bookingsIndex },
             $push: { bookings: insertedBooking._id },
@@ -147,16 +149,12 @@ export const bookingResolvers: IResolvers = {
     },
     listing: (
       booking: Booking,
-      _args: Record<string, unknown>,
+      _args: {},
       { db }: { db: Database }
     ): Promise<Listing | null> => {
       return db.listings.findOne({ _id: booking.listing });
     },
-    tenant: (
-      booking: Booking,
-      _args: Record<string, unknown>,
-      { db }: { db: Database }
-    ): Promise<User | null> => {
+    tenant: (booking: Booking, _args: {}, { db }: { db: Database }) => {
       return db.users.findOne({ _id: booking.tenant });
     },
   },

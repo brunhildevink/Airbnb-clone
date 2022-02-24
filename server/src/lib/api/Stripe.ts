@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import stripe from "stripe";
 
 const client = new stripe(`${process.env.S_SECRET_KEY}`, {
@@ -5,7 +6,7 @@ const client = new stripe(`${process.env.S_SECRET_KEY}`, {
 });
 
 export const Stripe = {
-  connect: async (code: string): Promise<stripe.OAuthToken> => {
+  connect: async (code: string) => {
     const response = await client.oauth.token({
       grant_type: "authorization_code",
       code,
@@ -13,11 +14,7 @@ export const Stripe = {
 
     return response;
   },
-  charge: async (
-    amount: number,
-    source: string,
-    stripeAccount: string
-  ): Promise<string> => {
+  charge: async (amount: number, source: string, stripeAccount: string) => {
     const res = await client.charges.create(
       {
         amount,
@@ -26,14 +23,12 @@ export const Stripe = {
         application_fee_amount: Math.round(amount * 0.05),
       },
       {
-        stripeAccount,
+        stripe_account: stripeAccount,
       }
     );
 
     if (res.status !== "succeeded") {
-      throw new Error("Failed to create charge with Stripe");
+      throw new Error("failed to create charge with Stripe");
     }
-
-    return res.id;
   },
 };
