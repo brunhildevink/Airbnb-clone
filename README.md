@@ -1,6 +1,6 @@
 # tinyhouse-listings
 
-View the project live => https://tinyhouse-listings.herokuapp.com/login
+[View the project live](https://tinyhouse-listings.herokuapp.com)
 
 ## Server
 
