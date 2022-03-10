@@ -11,6 +11,7 @@ import {
 import { UserBookings, UserListings, UserProfile } from "./components/";
 import { ErrorBanner, PageSkeleton } from "../../lib/components";
 import { Viewer } from "../../lib/types";
+import { useScrollToTop } from "../../lib/hooks";
 
 interface Props {
   viewer: Viewer;
@@ -42,6 +43,8 @@ export const User = ({
       fetchPolicy: "cache-and-network",
     }
   );
+
+  useScrollToTop();
 
   const user = data ? data.user : null;
   const viewerIsUser = viewer.id === match.params.id;

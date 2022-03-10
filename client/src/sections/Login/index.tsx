@@ -17,6 +17,7 @@ import {
   displayErrorMessage,
 } from "../../lib/utils";
 import googleLogo from "./assets/google_logo.jpeg";
+import { useScrollToTop } from "../../lib/hooks";
 
 interface Props {
   setViewer: (viewer: Viewer) => void;
@@ -37,7 +38,10 @@ export const Login = ({ setViewer }: Props) => {
         }
       },
     });
+
   const logInRef = useRef(logIn);
+
+  useScrollToTop();
 
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
