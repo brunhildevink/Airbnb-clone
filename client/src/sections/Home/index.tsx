@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, RouteComponentProps } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { Col, Row, Layout, Typography } from "antd";
 import { useQuery } from "@apollo/client";
 
@@ -22,7 +22,8 @@ const { Paragraph, Title } = Typography;
 const PAGE_LIMIT = 4;
 const PAGE_NUMBER = 1;
 
-export const Home = ({ history }: RouteComponentProps) => {
+export const Home = () => {
+  const history = useHistory();
   const { loading, data } = useQuery<ListingsData, ListingsVariables>(
     LISTINGS,
     {

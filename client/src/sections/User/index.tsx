@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RouteComponentProps } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@apollo/client";
 import { Col, Layout, Row } from "antd";
 
@@ -22,11 +22,8 @@ interface MatchParams {
   id: string;
 }
 
-export const User = ({
-  match,
-  viewer,
-  setViewer,
-}: Props & RouteComponentProps<MatchParams>) => {
+export const User = ({ viewer, setViewer }: Props) => {
+  const { id } = useParams<MatchParams>();
   const [listingsPage, setListingsPage] = useState<number>(1);
   const [bookingsPage, setBookingsPage] = useState<number>(1);
   const PAGE_LIMIT: number = 4;
@@ -35,7 +32,7 @@ export const User = ({
     USER,
     {
       variables: {
-        id: match.params.id,
+        id,
         bookingsPage,
         listingsPage,
         limit: PAGE_LIMIT,
@@ -47,7 +44,7 @@ export const User = ({
   useScrollToTop();
 
   const user = data ? data.user : null;
-  const viewerIsUser = viewer.id === match.params.id;
+  const viewerIsUser = viewer.id === id;
 
   const userListings = user ? user.listings : null;
   const userBookings = user ? user.bookings : null;
