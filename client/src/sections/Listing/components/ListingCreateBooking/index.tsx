@@ -1,5 +1,5 @@
-import React from "react";
-import { Button, Card, DatePicker, Divider, Tooltip, Typography } from "antd";
+import React, { useEffect, useRef } from "react";
+import { Button, Card, DatePicker, Divider, Typography } from "antd";
 import moment, { Moment } from "moment";
 import { Listing as ListingData } from "../../../../lib/graphql/queries/Listing/__generated__/Listing";
 import { displayErrorMessage, formatListingPrice } from "../../../../lib/utils";
@@ -7,6 +7,7 @@ import { Viewer } from "../../../../lib/types";
 import { BookingsIndex } from "./types";
 
 const { Paragraph, Text, Title } = Typography;
+const { RangePicker } = DatePicker;
 
 interface Props {
   viewer: Viewer;
@@ -32,6 +33,13 @@ export const ListingCreateBooking = ({
   setModalVisible,
 }: Props) => {
   const bookingsIndexJSON: BookingsIndex = JSON.parse(bookingsIndex);
+  const setCheckOutDateRef = useRef(setCheckOutDate);
+
+  useEffect(() => {
+    if (checkInDate) {
+      setCheckOutDateRef.current(null);
+    }
+  }, [checkInDate, setCheckOutDateRef]);
 
   const dateIsBooked = (currentDate: Moment) => {
     const year = moment(currentDate).year();
@@ -62,32 +70,55 @@ export const ListingCreateBooking = ({
     }
   };
 
-  const verifyAndSetCheckOutDate = (selectedCheckOutDate: Moment | null) => {
-    if (checkInDate && selectedCheckOutDate) {
+  const verifyOverlappingDates = (
+    cursor: Moment,
+    selectedDate: Moment
+  ): boolean => {
+    let dateCursor = cursor;
+
+    while (moment(dateCursor).isBefore(selectedDate, "days")) {
+      dateCursor = moment(dateCursor).add(1, "days");
+
+      const year = moment(dateCursor).year();
+      const month = moment(dateCursor).month();
+      const day = moment(dateCursor).date();
+
+      if (
+        bookingsIndexJSON[year] &&
+        bookingsIndexJSON[year][month] &&
+        bookingsIndexJSON[year][month][day]
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const verifyAndSetCheckInDate = (selectedCheckInDate: Moment) => {
+    if (checkOutDate) {
+      if (verifyOverlappingDates(checkOutDate, selectedCheckInDate)) {
+        return displayErrorMessage(
+          "You can't book a period of time that overlaps existing bookings. Please try again!"
+        );
+      }
+    }
+
+    setCheckInDate(selectedCheckInDate);
+  };
+
+  const verifyAndSetCheckOutDate = (selectedCheckOutDate: Moment) => {
+    if (checkInDate) {
       if (moment(selectedCheckOutDate).isBefore(checkInDate, "days")) {
         return displayErrorMessage(
           `You can't book date of check out to be prior to check in!`
         );
       }
 
-      let dateCursor = checkInDate;
-
-      while (moment(dateCursor).isBefore(selectedCheckOutDate, "days")) {
-        dateCursor = moment(dateCursor).add(1, "days");
-
-        const year = moment(dateCursor).year();
-        const month = moment(dateCursor).month();
-        const day = moment(dateCursor).date();
-
-        if (
-          bookingsIndexJSON[year] &&
-          bookingsIndexJSON[year][month] &&
-          bookingsIndexJSON[year][month][day]
-        ) {
-          return displayErrorMessage(
-            "You can't book a period of time that overlaps existing bookings. Please try again!"
-          );
-        }
+      if (verifyOverlappingDates(checkInDate, selectedCheckOutDate)) {
+        return displayErrorMessage(
+          "You can't book a period of time that overlaps existing bookings. Please try again!"
+        );
       }
     }
 
@@ -120,65 +151,27 @@ export const ListingCreateBooking = ({
             </Title>
           </Paragraph>
           <Divider />
-          <div className="listing-booking__card-date-picker">
-            <Paragraph strong>Check In</Paragraph>
-            <DatePicker
-              value={checkInDate ? checkInDate : undefined}
+          <div>
+            <Paragraph strong>Choose dates</Paragraph>
+            <RangePicker
+              value={[checkInDate, checkOutDate]}
               format={"YYYY/MM/DD"}
-              showToday={false}
               disabled={checkInInputDisabled}
+              size="large"
               disabledDate={disabledDate}
-              onChange={(dateValue) => setCheckInDate(dateValue)}
-              onOpenChange={() => setCheckOutDate(null)}
-              renderExtraFooter={() => {
-                return (
-                  <div>
-                    <Text type="secondary" className="ant-calendar-footer-text">
-                      You can only book a listing within 90 days from today.
-                    </Text>
-                  </div>
-                );
-              }}
-            />
-          </div>
-          <div className="listing-booking__card-date-picker">
-            <Paragraph strong>Check Out</Paragraph>
-            <DatePicker
-              value={checkOutDate ? checkOutDate : undefined}
-              format={"YYYY/MM/DD"}
-              showToday={false}
-              disabled={checkOutInputDisabled}
-              disabledDate={disabledDate}
-              onChange={(dateValue) => verifyAndSetCheckOutDate(dateValue)}
-              dateRender={(current) => {
-                if (
-                  moment(current).isSame(
-                    checkInDate ? checkInDate : undefined,
-                    "day"
-                  )
-                ) {
-                  return (
-                    <Tooltip title="Check in date">
-                      <div className="ant-calendar-date ant-calendar-date__check-in">
-                        {current.date()}
-                      </div>
-                    </Tooltip>
-                  );
-                } else {
-                  return (
-                    <div className="ant-calendar-date">{current.date()}</div>
-                  );
+              onCalendarChange={(dates) => {
+                if (dates) {
+                  dates[0] && verifyAndSetCheckInDate(dates[0]);
+                  dates[1] && verifyAndSetCheckOutDate(dates[1]);
                 }
               }}
-              renderExtraFooter={() => {
-                return (
-                  <div>
-                    <Text type="secondary" className="ant-calendar-footer-text">
-                      Check-out cannot be before check-in.
-                    </Text>
-                  </div>
-                );
-              }}
+              renderExtraFooter={() => (
+                <div>
+                  <Text type="secondary" className="ant-calendar-footer-text">
+                    You can only book a listing within 90 days from today.
+                  </Text>
+                </div>
+              )}
             />
           </div>
         </div>
